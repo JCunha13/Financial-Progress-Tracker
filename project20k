@@ -1,0 +1,76 @@
+Private Sub Workbook_Open()
+    ' Display the UserForm when the file is opened
+    UserForm1.Show
+End Sub
+
+Private Sub CommandButton1_Click()
+    Dim numero As Integer
+    Dim encontrado As Boolean
+    Dim porcentagem As Double
+    Dim grafico As Chart
+    Dim cell As Range
+    Dim dados(1 To 2) As Double ' Array to store chart data
+    
+    ' Check if the entered value is numeric
+    If IsNumeric(TextBox1.Value) Then
+        numero = CInt(TextBox1.Value)
+        encontrado = False
+
+        ' Search for the number in the worksheet
+        For Each cell In ActiveSheet.UsedRange
+            If cell.Value = numero Then
+                ' Change the color of the cell corresponding to the number
+                cell.Interior.Color = RGB(0, 255, 0) ' Green color
+                encontrado = True
+                Exit For
+            End If
+        Next cell
+
+        ' If the number is not found, display a message
+        If Not encontrado Then
+            MsgBox "Number not found!"
+        End If
+    Else
+        MsgBox "Please enter a valid number."
+    End If
+    
+    ' Clear the TextBox
+    TextBox1.Value = ""
+
+    ' Calculate the percentage of the goal (200)
+    porcentagem = (numero / 200) * 100
+
+    ' Populate the data array for the chart
+    dados(1) = porcentagem ' Progress
+    dados(2) = 100 - porcentagem ' Remaining
+    
+    ' Check if a chart already exists on the worksheet and delete it
+    On Error Resume Next
+    ActiveSheet.ChartObjects("GraficoProgresso").Delete
+    On Error GoTo 0
+    
+    ' Create a pie chart showing progress
+    Set grafico = ActiveSheet.Shapes.AddChart2(5, xlPie, 300, 50, 300, 300).Chart
+    grafico.SeriesCollection.NewSeries
+    grafico.SeriesCollection(1).XValues = Array("Progress", "Remaining")
+    grafico.SeriesCollection(1).Values = dados
+    grafico.ChartTitle.Text = "Progress: " & Round(porcentagem, 2) & "%"
+    grafico.ChartType = xlPie
+    
+    ' Rename the chart for easier updates in the future
+    grafico.Parent.Name = "GraficoProgresso"
+    
+    ' Format the chart (optional)
+    With grafico.FullSeriesCollection(1)
+        .Points(1).Format.Fill.ForeColor.RGB = RGB(0, 176, 80) ' Progress color
+        .Points(2).Format.Fill.ForeColor.RGB = RGB(192, 192, 192) ' Remaining color
+    End With
+End Sub
+
+Private Sub TextBox1_Change()
+    ' Event triggered when the value in TextBox1 changes
+End Sub
+
+Private Sub UserForm_Click()
+    ' Event triggered when the UserForm is clicked
+End Sub
